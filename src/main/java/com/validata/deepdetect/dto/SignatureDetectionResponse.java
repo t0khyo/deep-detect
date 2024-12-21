@@ -4,8 +4,8 @@ import lombok.Builder;
 
 @Builder
 public record SignatureDetectionResponse(
-        Float similarity,
-        Float probability,
+        Float similarityPercentage,
+        Float probabilityPercentage,
         Boolean signatureWasNotForged
 ) {
 }
