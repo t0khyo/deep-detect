@@ -31,18 +31,6 @@
 	</properties>
 	<dependencies>
 
-		<!--  Data JPA: for persistence layer and Spring Data JPA repositories  -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-
-		<!--  Security  -->
-<!--		<dependency>-->
-<!--			<groupId>org.springframework.boot</groupId>-->
-<!--			<artifactId>spring-boot-starter-security</artifactId>-->
-<!--		</dependency>-->
-
 		<!--  Validation: for validation support (e.g, Hibernate Validator) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -74,19 +62,11 @@
 			<version>2.2.0</version>
 		</dependency>
 
-		<!--  H2: Provides a fast in-memory database that supports JDBC API  -->
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-
 		<!--  Lombok: library which helps to reduce boilerplate code. Provides setters, getter and more using annotations   -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.36</version>
-			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<!--  Testing  -->
@@ -121,13 +101,21 @@
 	<build>
 		<plugins>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-
-					<image>
-						<builder>paketobuildpacks/builder-jammy-base:latest</builder>
-					</image>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>
@@ -135,23 +123,6 @@
 						</exclude>
 					</excludes>
 				</configuration>
-				<executions>
-					<execution>
-						<phase>compile</phase>
-						<goals>
-							<goal>process-aot</goal>
-						</goals>
-					</execution>
-				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>org.projectlombok</groupId>
-						<artifactId>lombok</artifactId>
-						<version>1.18.36</version>
-						<scope>provided</scope>
-						<classifier>annotation-processor</classifier>
-					</dependency>
-				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
