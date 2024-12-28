@@ -2,79 +2,88 @@ package com.validata.deepdetect.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.validata.deepdetect.dto.SignatureDetectionResponse;
+import com.validata.deepdetect.exception.InvalidFileException;
+import com.validata.deepdetect.exception.ModelServerException;
 import com.validata.deepdetect.service.SignatureDetectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SignatureDetectionServiceImpl implements SignatureDetectionService {
-    private final String AI_MODEL_SIGNATURE_ENDPOINT = "http://localhost:8000/predict";
-    private final HttpClient client = HttpClient.newHttpClient();
+    @Value("${model.server.base-url}")
+    private String baseUrl;
 
-    @Override
-    public SignatureDetectionResponse verifySignature(MultipartFile genuineSignatureFile, MultipartFile signatureToVerifyFile) {
-        try {
-            // Build the multipart body
-            String boundary = "Boundary-" + System.currentTimeMillis();
-            String body = buildMultipartBody(boundary, genuineSignatureFile, signatureToVerifyFile);
+    private static final String PREDICT_ENDPOINT = "/predict";
+    private static final String FIELD_GENUINE_SIGNATURE = "genuineSignature";
+    private static final String FIELD_SIGNATURE_TO_VERIFY = "signatureToVerify";
 
+    public SignatureDetectionResponse verifySignature(MultipartFile genuineSignature, MultipartFile signatureToVerify) {
+        validateFiles(genuineSignature, signatureToVerify);
 
-            // Create the HTTP request
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(AI_MODEL_SIGNATURE_ENDPOINT))
-                    .header("Content-Type", "multipart/form-data; boundary=" + boundary)
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build();
+        String url = baseUrl + PREDICT_ENDPOINT;
 
-            log.info("Request: {}", request);
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPost httpPost = new HttpPost(url);
 
-            // Send the request and parse the response
-            HttpClient client = HttpClient.newHttpClient();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.addBinaryBody(FIELD_GENUINE_SIGNATURE, genuineSignature.getInputStream(),
+                    getContentType(genuineSignature), genuineSignature.getOriginalFilename());
+            builder.addBinaryBody(FIELD_SIGNATURE_TO_VERIFY, signatureToVerify.getInputStream(),
+                    getContentType(signatureToVerify), signatureToVerify.getOriginalFilename());
 
-            log.info("Response: {}, body: {}", response, response.body());
+            httpPost.setEntity(builder.build());
 
-            // Map JSON response to SignatureDetectionResponse
-            ObjectMapper objectMapper = new ObjectMapper();
-            return objectMapper.readValue(response.body(), SignatureDetectionResponse.class);
-
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return null; // Return null in case of an error
+            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                log.info("Request to {} with files: {} and {}", url, genuineSignature.getOriginalFilename(),
+                        signatureToVerify.getOriginalFilename());
+                if (response.getCode() == 200) {
+                    return parseResponse(response.getEntity());
+                } else {
+                    throw new ModelServerException("Model server error. HTTP code: " + response.getCode());
+                }
+            }
+        } catch (IOException e) {
+            throw new ModelServerException("Error during HTTP call to model server", e);
         }
     }
 
-    private String buildMultipartBody(String boundary, MultipartFile genuineSignature, MultipartFile signatureToVerify) throws IOException {
-        StringBuilder body = new StringBuilder();
+    private ContentType getContentType(MultipartFile file) {
+        try {
+            return ContentType.parse(file.getContentType());
+        } catch (Exception e) {
+            log.warn("Invalid content type for file {}. Defaulting to application/octet-stream.", file.getOriginalFilename());
+            return ContentType.APPLICATION_OCTET_STREAM;
+        }
+    }
 
-        // Add the genuine signature
-        body.append("--").append(boundary).append("\r\n");
-        body.append("Content-Disposition: form-data; name=\"genuineSignature\"; filename=\"")
-                .append(genuineSignature.getOriginalFilename()).append("\"\r\n");
-        body.append("Content-Type: ").append(genuineSignature.getContentType()).append("\r\n\r\n");
-        body.append(new String(genuineSignature.getBytes())).append("\r\n");
+    private void validateFiles(MultipartFile... files) {
+        for (MultipartFile file : files) {
+            if (file == null || file.isEmpty()) {
+                throw new InvalidFileException("File cannot be null or empty: " + file.getName());
+            }
+        }
+    }
 
-        // Add the signature to verify
-        body.append("--").append(boundary).append("\r\n");
-        body.append("Content-Disposition: form-data; name=\"signatureToVerify\"; filename=\"")
-                .append(signatureToVerify.getOriginalFilename()).append("\"\r\n");
-        body.append("Content-Type: ").append(signatureToVerify.getContentType()).append("\r\n\r\n");
-        body.append(new String(signatureToVerify.getBytes())).append("\r\n");
 
-        // End the boundary
-        body.append("--").append(boundary).append("--");
-
-        return body.toString();
+    private SignatureDetectionResponse parseResponse(HttpEntity entity) throws IOException {
+        String jsonResponse = new String(entity.getContent().readAllBytes());
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.readValue(jsonResponse, SignatureDetectionResponse.class);
     }
 }
+
 
