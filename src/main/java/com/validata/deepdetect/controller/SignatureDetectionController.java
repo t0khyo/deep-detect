@@ -5,7 +5,6 @@ import com.validata.deepdetect.service.SignatureDetectionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,8 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-@RequiredArgsConstructor
+@RestController
 @RequestMapping("/api/v1/signature")
+@RequiredArgsConstructor
 public class SignatureDetectionController {
     private final SignatureDetectionService detectionService;
 

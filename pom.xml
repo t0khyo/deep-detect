@@ -108,6 +108,7 @@
 			<artifactId>httpclient5</artifactId>
 			<version>5.4</version> 
 		</dependency>
+
 		<!-- If you need to handle JSON serialization/deserialization for responses.-->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
