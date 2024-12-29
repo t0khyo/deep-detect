@@ -47,6 +47,7 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
 
             httpPost.setEntity(builder.build());
 
+            log.info("request: {}", httpPost.getRequestUri());
             try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
                 log.info("Request to {} with files: {} and {}", url, genuineSignature.getOriginalFilename(),
                         signatureToVerify.getOriginalFilename());
@@ -85,5 +86,3 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
         return objectMapper.readValue(jsonResponse, SignatureDetectionResponse.class);
     }
 }
-
-
