@@ -2,7 +2,7 @@ FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-COPY target/your-application-name.jar app.jar
+COPY target/deepdetect-0.0.1-SNAPSHOT.jar deep-detect-app.jar
 
 EXPOSE 8080
 
