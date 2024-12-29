@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Random;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/signature")
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class SignatureDetectionController {
             @RequestParam MultipartFile genuineSignature,
             @RequestParam MultipartFile signatureToVerify
     ) {
+        log.info("verifySignature(): genuine: {} - to verify: {}", genuineSignature.getOriginalFilename(), signatureToVerify.getOriginalFilename());
         return ResponseEntity.ok(detectionService.verifySignature(genuineSignature, signatureToVerify));
     }
 
@@ -43,8 +46,8 @@ public class SignatureDetectionController {
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public ResponseEntity<SignatureDetectionResponse> verifySignatureTest(
-            @RequestParam MultipartFile genuineSignature,
-            @RequestParam MultipartFile signatureToVerify
+            MultipartFile genuineSignature,
+            MultipartFile signatureToVerify
     ) {
         Random random = new Random();
 

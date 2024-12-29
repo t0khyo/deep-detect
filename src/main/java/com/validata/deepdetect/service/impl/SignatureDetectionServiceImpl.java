@@ -7,16 +7,14 @@ import com.validata.deepdetect.exception.ModelServerException;
 import com.validata.deepdetect.service.SignatureDetectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.HttpEntity;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 
 import java.io.IOException;
 
@@ -31,43 +29,37 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
     private static final String FIELD_GENUINE_SIGNATURE = "genuineSignature";
     private static final String FIELD_SIGNATURE_TO_VERIFY = "signatureToVerify";
 
+    private final RestTemplate restTemplate = new RestTemplate();
+
     public SignatureDetectionResponse verifySignature(MultipartFile genuineSignature, MultipartFile signatureToVerify) {
         validateFiles(genuineSignature, signatureToVerify);
 
         String url = baseUrl + PREDICT_ENDPOINT;
 
-        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(url);
-
-            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            builder.addBinaryBody(FIELD_GENUINE_SIGNATURE, genuineSignature.getInputStream(),
-                    getContentType(genuineSignature), genuineSignature.getOriginalFilename());
-            builder.addBinaryBody(FIELD_SIGNATURE_TO_VERIFY, signatureToVerify.getInputStream(),
-                    getContentType(signatureToVerify), signatureToVerify.getOriginalFilename());
-
-            httpPost.setEntity(builder.build());
-
-            log.info("request: {}", httpPost.getRequestUri());
-            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
-                log.info("Request to {} with files: {} and {}", url, genuineSignature.getOriginalFilename(),
-                        signatureToVerify.getOriginalFilename());
-                if (response.getCode() == 200) {
-                    return parseResponse(response.getEntity());
-                } else {
-                    throw new ModelServerException("Model server error. HTTP code: " + response.getCode());
-                }
-            }
-        } catch (IOException e) {
-            throw new ModelServerException("Error during HTTP call to model server", e);
-        }
-    }
-
-    private ContentType getContentType(MultipartFile file) {
         try {
-            return ContentType.parse(file.getContentType());
-        } catch (Exception e) {
-            log.warn("Invalid content type for file {}. Defaulting to application/octet-stream.", file.getOriginalFilename());
-            return ContentType.APPLICATION_OCTET_STREAM;
+            // Prepare the files for the POST request
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            body.add(FIELD_GENUINE_SIGNATURE, genuineSignature.getResource());
+            body.add(FIELD_SIGNATURE_TO_VERIFY, signatureToVerify.getResource());
+
+            // Create the request entity with the files
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            // Send the POST request
+            log.info("Sending request to: {}", url);
+            ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+            if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                return parseResponse(responseEntity.getBody());
+            } else {
+                throw new ModelServerException("Model server error. HTTP code: " + responseEntity.getStatusCodeValue());
+            }
+        } catch (HttpStatusCodeException e) {
+            throw new ModelServerException("Error during HTTP call to model server: " + e.getMessage(), e);
+        } catch (IOException e) {
+            throw new ModelServerException("Error processing response", e);
         }
     }
 
@@ -79,9 +71,7 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
         }
     }
 
-
-    private SignatureDetectionResponse parseResponse(HttpEntity entity) throws IOException {
-        String jsonResponse = new String(entity.getContent().readAllBytes());
+    private SignatureDetectionResponse parseResponse(String jsonResponse) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(jsonResponse, SignatureDetectionResponse.class);
     }
