@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface CustomerService {
 
     Customer createCustomer(Customer customer);
-    Optional<Customer> getCustomerById(Long id);
+    Customer getCustomerById(Long id);
     List<Customer> searchCustomers( String searchQuery);
-    boolean deleteCustomer(Long id);
+    void deleteCustomer(Long id);
 }

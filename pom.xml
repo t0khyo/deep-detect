@@ -74,20 +74,20 @@
 			<version>2.2.0</version>
 		</dependency>
 
-		<!--  H2: Provides a fast in-memory database that supports JDBC API  -->
-<!--		<dependency>-->
-<!--			<groupId>com.h2database</groupId>-->
-<!--			<artifactId>h2</artifactId>-->
-<!--			<scope>runtime</scope>-->
-<!--		</dependency>-->
+		<!-- H2: Provides a fast in-memory database that supports JDBC API -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 
 
 		<!--  mysql Database  -->
-		<dependency>
-			<groupId>com.mysql</groupId>
-			<artifactId>mysql-connector-j</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.mysql</groupId>-->
+<!--			<artifactId>mysql-connector-j</artifactId>-->
+<!--			<scope>runtime</scope>-->
+<!--		</dependency>-->
 
 		<!--  Lombok: library which helps to reduce boilerplate code. Provides setters, getter and more using annotations   -->
 		<dependency>
@@ -156,8 +156,8 @@
 						<groupId>org.projectlombok</groupId>
 						<artifactId>lombok</artifactId>
 						<version>1.18.36</version>
-						<scope>provided</scope>
-						<classifier>annotation-processor</classifier>
+<!--						<scope>provided</scope>-->
+<!--						<classifier>annotation-processor</classifier>-->
 					</dependency>
 				</dependencies>
 			</plugin>
