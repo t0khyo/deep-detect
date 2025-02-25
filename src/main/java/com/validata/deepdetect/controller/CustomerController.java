@@ -1,5 +1,6 @@
 package com.validata.deepdetect.controller;
 
+import com.validata.deepdetect.dto.CustomerRequest;
 import com.validata.deepdetect.model.Customer;
 import com.validata.deepdetect.service.CustomerService;
 import lombok.RequiredArgsConstructor;
@@ -15,19 +16,23 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @PostMapping
-    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
-        return ResponseEntity.ok(customerService.createCustomer(customer));
+    public ResponseEntity<Customer> createCustomer(@RequestBody CustomerRequest customerRequest) {
+        return ResponseEntity.ok(customerService.createCustomer(customerRequest));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
-
         return ResponseEntity.ok(customerService.getCustomerById(id));
     }
 
     @GetMapping
-    public ResponseEntity<List<Customer>> searchCustomers(@RequestParam(required = false) String searchQuery) {
-        return ResponseEntity.ok(customerService.searchCustomers(searchQuery));
+    public ResponseEntity<List<Customer>> getAllCustomers() {
+        return ResponseEntity.ok(customerService.getAllCustomers());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<Customer>> searchCustomers(@RequestParam(required = false) String query) {
+        return ResponseEntity.ok(customerService.searchCustomers(query));
     }
 
     @DeleteMapping("/{id}")
