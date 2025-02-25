@@ -57,7 +57,7 @@ public class User implements UserDetails, CredentialsContainer {
 
     @Override
     public String getUsername() {
-        return this.email;
+        return this.getEmail();
     }
 
     @Override

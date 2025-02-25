@@ -3,20 +3,25 @@ package com.validata.deepdetect.mapper;
 import com.validata.deepdetect.dto.SignUpRequest;
 import com.validata.deepdetect.dto.UserResponse;
 import com.validata.deepdetect.model.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
+@Component
+public class UserMapper {
+    public static User toEntity(SignUpRequest signUpRequest) {
+        return User.builder()
+                .firstName(signUpRequest.firstName())
+                .lastName(signUpRequest.lastName())
+                .email(signUpRequest.email())
+                .password(signUpRequest.password())
+                .build();
+    }
 
-@Mapper(componentModel = "spring")
-public interface UserMapper {
-    @Mapping(source = "firstName", target = "firstName")
-    @Mapping(source = "lastName", target = "lastName")
-    @Mapping(source = "email", target = "email")
-    @Mapping(source = "password", target = "password")
-    User toEntity(SignUpRequest signUpRequest);
-
-    @Mapping(source = "firstName", target = "firstName")
-    @Mapping(source = "lastName", target = "lastName")
-    @Mapping(source = "email", target = "email")
-    UserResponse toResponse(User user);
+    public static UserResponse toResponse(User user) {
+        return UserResponse.builder()
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .build();
+    }
 }
