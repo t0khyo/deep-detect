@@ -133,7 +133,6 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-
 					<image>
 						<builder>paketobuildpacks/builder-jammy-base:latest</builder>
 					</image>
@@ -152,15 +151,6 @@
 						</goals>
 					</execution>
 				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>org.projectlombok</groupId>
-						<artifactId>lombok</artifactId>
-						<version>1.18.36</version>
-<!--						<scope>provided</scope>-->
-						<classifier>annotation-processor</classifier>
-					</dependency>
-				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
