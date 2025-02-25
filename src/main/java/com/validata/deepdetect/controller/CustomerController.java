@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(path = "api/v1/customer")
+@RequestMapping(path = "api/v1/customers")
 public class CustomerController {
     private final CustomerService customerService;
 
