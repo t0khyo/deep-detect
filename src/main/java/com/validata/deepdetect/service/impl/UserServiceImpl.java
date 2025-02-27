@@ -1,4 +1,4 @@
-package com.validata.deepdetect.service;
+package com.validata.deepdetect.service.impl;
 
 import com.validata.deepdetect.dto.SignUpRequest;
 import com.validata.deepdetect.dto.UserResponse;
@@ -8,6 +8,7 @@ import com.validata.deepdetect.model.Role;
 import com.validata.deepdetect.model.User;
 import com.validata.deepdetect.repository.RoleRepository;
 import com.validata.deepdetect.repository.UserRepository;
+import com.validata.deepdetect.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
