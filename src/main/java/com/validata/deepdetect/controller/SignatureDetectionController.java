@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-
+@RestController
+@RequestMapping("/api/v1/signature")
+@RequiredArgsConstructor
 public class SignatureDetectionController {
     private final SignatureDetectionService detectionService;
 
