@@ -79,7 +79,7 @@ public class JwtUtil {
             throw new JwtTokenException("Invalid JWT", e);
         }
 
-        log.info("Validated JWT for subject: {}", claims.getSubject());
+//        log.info("Validated JWT for subject: {}", claims.getSubject());
         return claims;
     }
 

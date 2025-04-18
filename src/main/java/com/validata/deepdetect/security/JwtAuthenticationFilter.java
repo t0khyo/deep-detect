@@ -62,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // 3. Invoke the "rest" of the chain
-        log.info("Authenticated user: {}", username);
+//        log.info("Authenticated user: {}", username);
         filterChain.doFilter(request, response);
     }
 }

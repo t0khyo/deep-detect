@@ -53,7 +53,7 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
                 if (response.getCode() == 200) {
                     return parseResponse(response.getEntity());
                 } else {
-                    throw new ModelServerException("Model server error. HTTP code: " + response.getCode());
+                    throw new ModelServerException("Model server error. HTTP code: " + response.getCode()) ;
                 }
             }
         } catch (IOException e) {

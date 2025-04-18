@@ -30,7 +30,7 @@ public class AuthService {
 
             String token = jwtUtil.generateToken(authentication);
 
-            log.info("User logged in: {}", authentication.getPrincipal());
+//            log.info("User logged in: {}", authentication.getPrincipal());
             return new LoginResponse(token);
         } catch (BadCredentialsException e) {
             log.error("login(): BadCredentialsException");
