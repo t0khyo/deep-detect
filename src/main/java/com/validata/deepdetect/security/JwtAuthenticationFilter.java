@@ -32,7 +32,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 1. Decide whether the filter should be applied.
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.error("No JWT access token in the request or access token format invalid");
+            log.error("No JWT access token. Method: {}, URI: {}, RemoteAddr: {}, UserAgent: {}, Query: {}",
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    request.getRemoteAddr(),
+                    request.getHeader("User-Agent"),
+                    request.getQueryString()
+            );
+
             filterChain.doFilter(request, response);
             return;
         }
