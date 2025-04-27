@@ -1,11 +1,13 @@
 package com.validata.deepdetect.controller;
 
 import com.validata.deepdetect.dto.CustomerRequest;
+import com.validata.deepdetect.dto.CustomerSignatureResponse;
 import com.validata.deepdetect.model.Customer;
 import com.validata.deepdetect.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -40,5 +42,23 @@ public class CustomerController {
         customerService.deleteCustomer(id);
         return ResponseEntity.ok("Customer with ID " + id + " has been deleted successfully.");
     }
+
+    @PostMapping("/{id}/signature")
+    public ResponseEntity<CustomerSignatureResponse> uploadSignature(
+            @PathVariable Long id,
+            @RequestParam("signatureFile") MultipartFile signatureFile){try {
+
+        Customer updatedCustomer = customerService.updateCustomerSignature(id, signatureFile);
+        return ResponseEntity.ok(new CustomerSignatureResponse(
+                updatedCustomer.getFirstName(),
+                updatedCustomer.getLastName(),
+                updatedCustomer.getSignatureUrl()
+        ));
+    } catch (Exception e) {
+        return ResponseEntity.status(500)
+                .body(new CustomerSignatureResponse("Error", "Error", "Error"));
+    }
+    }
+
 
 }

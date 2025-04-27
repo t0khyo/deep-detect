@@ -6,6 +6,10 @@ import com.validata.deepdetect.mapper.CustomerMapper;
 import com.validata.deepdetect.model.Customer;
 import com.validata.deepdetect.repository.CustomerRepository;
 import com.validata.deepdetect.service.CustomerService;
+import com.validata.deepdetect.service.StorageService;
+
+import com.validata.deepdetect.exception.FileStorageException;
+import org.springframework.web.multipart.MultipartFile;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +23,7 @@ import java.util.Optional;
 public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final StorageService storageService;
 
     @Override
     public Customer createCustomer(CustomerRequest customerRequest) {
@@ -59,4 +64,32 @@ public class CustomerServiceImpl implements CustomerService {
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }
+
+    @Override
+    public Customer updateCustomerSignature(Long id, MultipartFile signatureFile) {
+        log.info("Updating signature for customer with ID: {}", id);
+
+
+        Customer customer = customerRepository.findById(id).orElseThrow(
+                () -> {
+                    log.error("Customer not found with ID: {}", id);
+                    return new CustomerNotFoundException(id);
+                });
+
+        String fileUrl;
+        try {
+            fileUrl = storageService.saveFile(signatureFile);
+        } catch (Exception e) {
+            log.error("Error storing signature file for customer with ID: {}", id, e);
+            throw new FileStorageException("Could not store file " + signatureFile.getOriginalFilename() + ". Please try again!");
+        }
+
+
+        customer.setSignatureUrl(fileUrl);
+        Customer updatedCustomer = customerRepository.save(customer);
+        log.info("Customer's signature updated successfully with ID: {}", id);
+
+        return updatedCustomer;
+    }
+
 }
