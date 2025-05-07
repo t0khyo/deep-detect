@@ -61,4 +61,14 @@ public class CustomerController {
     }
 
 
+    @GetMapping("/{id}/signature")
+    public ResponseEntity<byte[]> getCustomerSignature(@PathVariable Long id) {
+        byte[] imageBytes = customerService.getCustomerSignature(id);
+
+        return ResponseEntity
+                .ok()
+                .header("Content-Type", "image/png") // أو "image/jpeg" حسب نوع الصورة
+                .body(imageBytes);
+    }
+
 }

@@ -17,4 +17,6 @@ public interface CustomerService {
     List<Customer> getAllCustomers();
 
     Customer updateCustomerSignature(Long id, MultipartFile signatureFile);
+
+    byte[] getCustomerSignature(Long customerId);
 }

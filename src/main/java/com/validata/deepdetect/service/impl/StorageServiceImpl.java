@@ -49,6 +49,17 @@ public class StorageServiceImpl implements StorageService {
         int dotIndex = fileName.lastIndexOf(".");
         return dotIndex > 0 ? fileName.substring(dotIndex) : "";
     }
+
+
+    @Override
+    public byte[] loadFileAsBytes(String fileUrl) {
+        try {
+            Path path = Paths.get(fileUrl);
+            return Files.readAllBytes(path);
+        } catch (IOException e) {
+            throw new FileStorageException("Could not read file from path: " + fileUrl);
+        }
+    }
 }
 
 

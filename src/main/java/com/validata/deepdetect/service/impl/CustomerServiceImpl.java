@@ -91,5 +91,28 @@ public class CustomerServiceImpl implements CustomerService {
 
         return updatedCustomer;
     }
+    @Override
+    public byte[] getCustomerSignature(Long id) {
+        log.info("Fetching signature image for customer with ID: {}", id);
+
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Customer not found with ID: {}", id);
+                    return new CustomerNotFoundException(id);
+                });
+
+        if (customer.getSignatureUrl() == null || customer.getSignatureUrl().isEmpty()) {
+            log.error("No signature found for customer ID: {}", id);
+            throw new FileStorageException("No signature found for customer ID: " + id);
+        }
+
+        try {
+            return storageService.loadFileAsBytes(customer.getSignatureUrl());
+        } catch (Exception e) {
+            log.error("Error loading signature image for customer ID: {}", id, e);
+            throw new FileStorageException("Could not load signature image for customer ID: " + id);
+        }
+    }
+
 
 }
