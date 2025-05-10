@@ -5,6 +5,7 @@ import com.validata.deepdetect.dto.CustomerSignatureResponse;
 import com.validata.deepdetect.model.Customer;
 import com.validata.deepdetect.service.CustomerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,7 +44,7 @@ public class CustomerController {
         return ResponseEntity.ok("Customer with ID " + id + " has been deleted successfully.");
     }
 
-    @PostMapping("/{id}/signature")
+    @PostMapping(path = "/{id}/signature", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CustomerSignatureResponse> uploadSignature(
             @PathVariable Long id,
             @RequestParam("signatureFile") MultipartFile signatureFile){try {

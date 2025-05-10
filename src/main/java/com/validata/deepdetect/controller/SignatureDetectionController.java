@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class SignatureDetectionController {
     private final SignatureDetectionService detectionService;
 
-    @PostMapping("/verify")
+    @PostMapping(value = "/verify", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Verify signature authenticity", description = "Validates a signature against a genuine reference.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Verification successful"),
