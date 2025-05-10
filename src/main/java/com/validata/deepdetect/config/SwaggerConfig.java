@@ -43,7 +43,7 @@ public class SwaggerConfig {
 
     private Info getApiInfo() {
         return new Info()
-                .title("Dar Elsokar API Documentation")
+                .title("Deep Detect API Docs")
                 .version("1.0.0");
     }
 }
