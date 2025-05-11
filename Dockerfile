@@ -29,7 +29,7 @@ COPY --from=builder /build/target/deepdetect-1.0.0.jar app.jar
 EXPOSE 8080
 
 # Set environment variables
-ENV JAVA_OPTS="-Xms512m -Xmx1024m"
+ENV JAVA_OPTS="-Xms512m -Xmx1024m -Djava.security.egd=file:/dev/./urandom"
 
 # Run the application
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

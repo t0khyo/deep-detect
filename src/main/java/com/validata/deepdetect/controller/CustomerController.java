@@ -76,4 +76,9 @@ public class CustomerController {
     public ResponseEntity<CustomerResponse> deleteSignature(@PathVariable Long id) {
         return ResponseEntity.ok(customerService.deleteSignature(id));
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<CustomerResponse>> searchCustomers(@RequestParam String query) {
+        return ResponseEntity.ok(customerService.searchCustomersByName(query));
+    }
 }

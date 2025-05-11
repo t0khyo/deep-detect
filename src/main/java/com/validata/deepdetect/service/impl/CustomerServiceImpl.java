@@ -134,4 +134,13 @@ public class CustomerServiceImpl implements CustomerService {
 
         return customerMapper.toResponse(customer);
     }
+
+    @Override
+    public List<CustomerResponse> searchCustomersByName(String query) {
+        log.info("Searching customers with name containing: {}", query);
+        return customerRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(query, query)
+                .stream()
+                .map(customerMapper::toResponse)
+                .collect(Collectors.toList());
+    }
 }

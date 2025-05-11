@@ -14,4 +14,5 @@ public interface CustomerService {
     void deleteCustomer(Long id);
     CustomerResponse uploadSignature(Long id, MultipartFile file);
     CustomerResponse deleteSignature(Long id);
+    List<CustomerResponse> searchCustomersByName(String query);
 }
