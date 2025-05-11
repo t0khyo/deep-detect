@@ -2,6 +2,7 @@ package com.validata.deepdetect.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -23,6 +24,7 @@ import java.util.Objects;
 
 @Slf4j
 @ControllerAdvice
+@Order(1)  // Higher priority than ResponseEntityExceptionHandler
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
@@ -67,6 +69,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(CustomerNotFoundException.class)
+    protected ResponseEntity<Object> handleCustomerNotFoundException(
+            CustomerNotFoundException ex,
+            WebRequest request) {
+        log.warn("Customer not found: {}", ex.getMessage());
+        ApiError apiError = new ApiError(HttpStatus.NOT_FOUND, ex.getMessage());
+        apiError.setPath(request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     protected ResponseEntity<Object> handleResourceNotFoundException(
             ResourceNotFoundException ex,
@@ -83,15 +95,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
         apiError.setPath(request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(
-            MaxUploadSizeExceededException ex,
-            WebRequest request) {
-        ApiError apiError = new ApiError(HttpStatus.PAYLOAD_TOO_LARGE, "File size exceeds maximum limit");
-        apiError.setPath(request.getDescription(false).replace("uri=", ""));
-        return new ResponseEntity<>(apiError, HttpStatus.PAYLOAD_TOO_LARGE);
     }
 
     @ExceptionHandler(ModelServerException.class)
