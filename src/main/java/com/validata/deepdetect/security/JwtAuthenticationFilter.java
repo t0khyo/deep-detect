@@ -32,12 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 1. Decide whether the filter should be applied.
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.error("No JWT access token. Method: {}, URI: {}, RemoteAddr: {}, UserAgent: {}, Query: {}",
+            log.info("No JWT token found in request - Method: {}, URI: {}, RemoteAddr: {}",
                     request.getMethod(),
                     request.getRequestURI(),
-                    request.getRemoteAddr(),
-                    request.getHeader("User-Agent"),
-                    request.getQueryString()
+                    request.getRemoteAddr()
             );
 
             filterChain.doFilter(request, response);
@@ -62,14 +60,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.info("Successfully authenticated user: {} for request: {}", username, request.getRequestURI());
             }
         } catch (Exception ex) {
-            log.error("JWT authentication failed: {}", ex.getMessage());
+            log.error("JWT authentication failed for request: {} - Error: {}", request.getRequestURI(), ex.getMessage());
             throw new JwtTokenException("JWT authentication failed", ex);
         }
 
         // 3. Invoke the "rest" of the chain
-//        log.info("Authenticated user: {}", username);
         filterChain.doFilter(request, response);
     }
 }

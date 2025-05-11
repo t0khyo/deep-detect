@@ -21,6 +21,7 @@ public class AuthService {
 
     public LoginResponse login(LoginRequest loginRequest) {
         try {
+            log.info("Attempting login for user: {}", loginRequest.email());
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.email(),
@@ -29,11 +30,10 @@ public class AuthService {
             );
 
             String token = jwtUtil.generateToken(authentication);
-
-//            log.info("User logged in: {}", authentication.getPrincipal());
+            log.info("Successfully logged in user: {}", loginRequest.email());
             return new LoginResponse(token);
         } catch (BadCredentialsException e) {
-            log.error("login(): BadCredentialsException");
+            log.error("Login failed for user: {} - Invalid credentials", loginRequest.email());
             throw new InvalidEmailOrPassword();
         }
     }

@@ -49,7 +49,7 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            log.info("Sending video analysis request to {} with file: {}", url, videoFile.getOriginalFilename());
+            log.info("Sending video analysis request for file: {}", videoFile.getOriginalFilename());
 
             ResponseEntity<String> rawResponse = restTemplate.exchange(
                     url,
@@ -60,7 +60,6 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
 
             if (rawResponse.getStatusCode() == HttpStatus.OK && rawResponse.getBody() != null) {
                 String responseBody = rawResponse.getBody();
-                log.info("Raw model server response: {}", responseBody);
                 
                 // Parse the response as JsonNode to inspect the structure
                 JsonNode rootNode = objectMapper.readTree(responseBody);
@@ -75,7 +74,7 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
                 // Convert to VideoDetectionResponse
                 VideoDetectionResponse response = objectMapper.readValue(responseBody, VideoDetectionResponse.class);
                 
-                log.info("Video analysis completed successfully for file: {}. Confidence: {}, IsAuthentic: {}, Type: {}",
+                log.info("Successfully analyzed video: {} - Confidence: {}, IsAuthentic: {}, Type: {}",
                         videoFile.getOriginalFilename(),
                         response.confidence(),
                         response.isAuthentic(),
@@ -88,10 +87,10 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
                 throw new ModelServerException(errorMessage);
             }
         } catch (RestClientException e) {
-            log.error("Error during video analysis request to model server", e);
+            log.error("Error during video analysis request: {}", e.getMessage());
             throw new ModelServerException("Error during video analysis: " + e.getMessage(), e);
-        } catch (IOException e) {
-            log.error("Error parsing model server response", e);
+        } catch (Exception e) {
+            log.error("Error parsing model server response: {}", e.getMessage());
             throw new ModelServerException("Error parsing model server response: " + e.getMessage(), e);
         }
     }
@@ -105,24 +104,28 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
                 }
             };
         } catch (IOException e) {
+            log.error("Error reading video file {}: {}", file.getOriginalFilename(), e.getMessage());
             throw new ModelServerException("Error reading video file: " + file.getOriginalFilename(), e);
         }
     }
 
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
+            log.error("Invalid video file: file is null or empty");
             throw new InvalidFileException("Video file cannot be null or empty");
         }
         
         // Validate file type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("video/")) {
+            log.error("Invalid video file type: {}", contentType);
             throw new InvalidFileException("Invalid file type. Expected video file, got: " + contentType);
         }
         
         // Validate file size (e.g., max 100MB)
         long maxSize = 100 * 1024 * 1024; // 100MB in bytes
         if (file.getSize() > maxSize) {
+            log.error("Video file size exceeds limit: {} bytes", file.getSize());
             throw new InvalidFileException("Video file size exceeds maximum limit of 100MB");
         }
     }

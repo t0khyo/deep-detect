@@ -29,11 +29,11 @@ import java.io.InputStream;
 @Service
 @RequiredArgsConstructor
 public class SignatureDetectionServiceImpl implements SignatureDetectionService {
-    private final CustomerRepository customerRepository;
     @Value("${model.server.base-url}")
     private String baseUrl;
 
     private final RestTemplate restTemplate;
+    private final CustomerRepository customerRepository;
 
     private static final String PREDICT_ENDPOINT = "/api/signature/predict";
     private static final String FIELD_GENUINE_SIGNATURE = "genuineSignature";
@@ -56,8 +56,7 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            log.info("Sending request to {} with files: {} and {}", url, 
-                    genuineSignature.getOriginalFilename(), signatureToVerify.getOriginalFilename());
+            log.info("Sending signature verification request to model server");
 
             ResponseEntity<SignatureVerificationResponse> response = restTemplate.exchange(
                     url,
@@ -67,12 +66,14 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
             );
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                log.info("Successfully received signature verification response");
                 return response.getBody();
-                } else {
+            } else {
+                log.error("Model server returned unexpected response: {}", response.getStatusCode());
                 throw new ModelServerException("Model server returned unexpected response: " + response.getStatusCode());
             }
         } catch (RestClientException e) {
-            log.error("Error during HTTP call to model server", e);
+            log.error("Error during signature verification request: {}", e.getMessage());
             throw new ModelServerException("Error during HTTP call to model server: " + e.getMessage(), e);
         }
     }
@@ -80,16 +81,15 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
     @Override
     public SignatureVerificationResponse verifyCustomerSignature(String customerId, MultipartFile signatureToVerify) {
         try {
-            // Get the customer's signature URL
             String signatureUrl = getCustomerSignatureUrl(customerId);
+            log.info("Retrieved signature URL for customer {}", customerId);
             
-            // Download the original signature
             ResponseEntity<byte[]> originalSignatureResponse = restTemplate.getForEntity(signatureUrl, byte[].class);
             if (originalSignatureResponse.getStatusCode() != HttpStatus.OK || originalSignatureResponse.getBody() == null) {
+                log.error("Failed to download original signature from URL: {}", signatureUrl);
                 throw new StorageException("Failed to download original signature from URL: " + signatureUrl);
             }
 
-            // Create a ByteArrayResource from the downloaded signature
             ByteArrayResource genuineSignatureResource = new ByteArrayResource(originalSignatureResponse.getBody()) {
                 @Override
                 public String getFilename() {
@@ -97,7 +97,6 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
                 }
             };
 
-            // Prepare the request to the model server
             String url = baseUrl + PREDICT_ENDPOINT;
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -108,7 +107,7 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            log.info("Sending verification request to {} for customer {}", url, customerId);
+            log.info("Sending customer signature verification request for customer {}", customerId);
 
             ResponseEntity<SignatureVerificationResponse> response = restTemplate.exchange(
                     url,
@@ -118,13 +117,15 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
             );
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                log.info("Successfully verified signature for customer {}", customerId);
                 return response.getBody();
             } else {
+                log.error("Model server returned unexpected response for customer {}: {}", customerId, response.getStatusCode());
                 throw new ModelServerException("Model server returned unexpected response: " + response.getStatusCode());
             }
 
         } catch (RestClientException e) {
-            log.error("Error during HTTP call to model server for customer {}: {}", customerId, e.getMessage());
+            log.error("Error during customer signature verification for customer {}: {}", customerId, e.getMessage());
             throw new ModelServerException("Error during HTTP call to model server: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("Failed to verify signature for customer {}: {}", customerId, e.getMessage());
@@ -134,7 +135,10 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
 
     private String getCustomerSignatureUrl(String customerId) {
         return customerRepository.findById(Long.parseLong(customerId))
-            .orElseThrow(() -> new CustomerNotFoundException("Customer not found with ID: " + customerId))
+            .orElseThrow(() -> {
+                log.error("Customer not found with ID: {}", customerId);
+                return new CustomerNotFoundException("Customer not found with ID: " + customerId);
+            })
             .getSignatureUrl();
     }
 
@@ -147,12 +151,14 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
                 }
             };
         } catch (IOException e) {
+            log.error("Error reading file {}: {}", file.getOriginalFilename(), e.getMessage());
             throw new ModelServerException("Error reading file: " + file.getOriginalFilename(), e);
-            }
         }
+    }
 
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
+            log.error("Invalid file: file is null or empty");
             throw new InvalidFileException("File cannot be null or empty");
         }
     }

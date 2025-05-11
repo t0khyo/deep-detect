@@ -50,12 +50,12 @@ public class JwtUtil {
 
         try {
             signedJWT.sign(jwsSigner);
+            log.info("Generated JWT for user: {}", username);
+            return signedJWT.serialize();
         } catch (JOSEException e) {
+            log.error("Failed to sign JWT for user: {} - {}", username, e.getMessage());
             throw new JwtTokenException("Failed to sign JWT", e);
         }
-
-        log.info("Generated JWT for user: {}", authentication.getName());
-        return signedJWT.serialize();
     }
 
     public JWTClaimsSet validateToken(String token) {
@@ -73,14 +73,16 @@ public class JwtUtil {
                 log.error("Access token expired for user: {}", claims.getSubject());
                 throw new JwtTokenException("Access token expired");
             }
+            
+            log.info("Successfully validated JWT for user: {}", claims.getSubject());
+            return claims;
         } catch (ParseException e) {
+            log.error("Failed to parse JWT token: {}", e.getMessage());
             throw new JwtTokenException("Failed to parse token", e);
         } catch (JOSEException e) {
+            log.error("Invalid JWT token: {}", e.getMessage());
             throw new JwtTokenException("Invalid JWT", e);
         }
-
-//        log.info("Validated JWT for subject: {}", claims.getSubject());
-        return claims;
     }
 
     public String extractUsername(JWTClaimsSet claims) {
@@ -91,6 +93,7 @@ public class JwtUtil {
         try {
             return claims.getStringListClaim("roles");
         } catch (ParseException e) {
+            log.error("Failed to parse roles from JWT claims: {}", e.getMessage());
             throw new JwtTokenException("Failed to parse roles", e);
         }
     }

@@ -29,12 +29,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse signup(SignUpRequest signUpRequest) {
+        log.info("Attempting to sign up new user with email: {}", signUpRequest.email());
         if (userRepository.existsByEmail(signUpRequest.email())) {
+            log.error("Signup failed - User already exists with email: {}", signUpRequest.email());
             throw new UserAlreadyExistsException("User with email " + signUpRequest.email() + " already exists");
         }
 
         Role userRole = roleRepository.findByName("USER")
-                .orElseThrow(() -> new RuntimeException("User role not found"));
+                .orElseThrow(() -> {
+                    log.error("User role not found in database");
+                    return new RuntimeException("User role not found");
+                });
 
         User user = User.builder()
                 .firstName(signUpRequest.firstName())
@@ -45,22 +50,28 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         user = userRepository.save(user);
-
-        log.info("new user: {}", user);
-
+        log.info("Successfully created new user with ID: {}", user.getId());
         return userMapper.toResponse(user);
     }
 
     @Override
     public UserResponse getUserProfile(String email) {
+        log.info("Retrieving user profile for email: {}", email);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> {
+                    log.error("User not found with email: {}", email);
+                    return new UsernameNotFoundException("User not found with email: " + email);
+                });
         return userMapper.toResponse(user);
     }
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        log.info("Loading user by username/email: {}", email);
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> {
+                    log.error("User not found with email: {}", email);
+                    return new UsernameNotFoundException("User not found with email: " + email);
+                });
     }
 }
