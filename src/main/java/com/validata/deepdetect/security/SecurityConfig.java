@@ -32,6 +32,7 @@ public class SecurityConfig {
                     requests.requestMatchers("/api/v1/auth/**").permitAll();
                     requests.requestMatchers("/h2-console/**").permitAll();
                     requests.requestMatchers("/swagger-ui/**", "/api-docs*/**").permitAll();
+                    requests.requestMatchers("/actuator/**").permitAll();
                     requests.anyRequest().authenticated();
                 })
                 .formLogin(AbstractHttpConfigurer::disable)
