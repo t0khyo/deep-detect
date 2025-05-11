@@ -35,3 +35,6 @@ build/
 /uploads/**
 
 /logs/**
+
+logs/**/*.log
+uploads/**/*.{jpg,png,zip}
