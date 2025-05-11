@@ -56,6 +56,13 @@
 			<version>2.8.5</version>
 		</dependency>
 
+		<!-- PostgreSQL JDBC Driver -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
 		<!--  H2: Provides a fast in-memory database that supports JDBC API  -->
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -109,6 +116,12 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.15.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-s3</artifactId>
+			<version>1.12.261</version>
 		</dependency>
 
 	</dependencies>

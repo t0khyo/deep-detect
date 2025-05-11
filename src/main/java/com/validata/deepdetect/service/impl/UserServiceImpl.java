@@ -33,7 +33,8 @@ public class UserServiceImpl implements UserService {
             throw new UserAlreadyExistsException("User with email " + signUpRequest.email() + " already exists");
         }
 
-        Role userRole = roleRepository.findByName("USER");
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("User role not found"));
 
         User user = User.builder()
                 .firstName(signUpRequest.firstName())

@@ -1,12 +1,18 @@
 package com.validata.deepdetect.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-@Getter
-@Setter
-@Builder
+import java.time.LocalDateTime;
+
+@Data
 @Entity
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "customers")
@@ -15,23 +21,30 @@ public class Customer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
     private String firstName;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
     private String lastName;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
 
-    @Column(length = 20)
-    private String phone;
+    @Column(name = "phone_number")
+    private String phoneNumber;
 
-    @Column(length = 200)
     private String address;
 
     @Column(name = "signature_url")
     private String signatureUrl;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @Override
     public String toString() {
@@ -40,7 +53,7 @@ public class Customer {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
-                ", phone='" + phone + '\'' +
+                ", phone='" + phoneNumber + '\'' +
                 ", address='" + address + '\'' +
                 ", signatureUrl='" + signatureUrl + '\'' +
                 '}';
