@@ -1,22 +1,18 @@
 package com.validata.deepdetect.service;
 
-import com.validata.deepdetect.dto.CustomerRequest;
 import com.validata.deepdetect.model.Customer;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface CustomerService {
-
-    Customer createCustomer(CustomerRequest customerRequest);
+    Customer createCustomer(Customer customer);
     Customer getCustomerById(Long id);
-    List<Customer> searchCustomers( String searchQuery);
-    void deleteCustomer(Long id);
-
     List<Customer> getAllCustomers();
-
-    Customer updateCustomerSignature(Long id, MultipartFile signatureFile);
-
+    List<Customer> searchCustomers(String searchQuery);
+    Customer updateCustomer(Long id, Customer customerDetails);
+    void deleteCustomer(Long id);
+    void uploadSignature(Long customerId, MultipartFile file);
     byte[] getCustomerSignature(Long customerId);
+    List<Customer> searchByName(String query);
 }

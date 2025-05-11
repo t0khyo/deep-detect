@@ -23,3 +23,97 @@ INSERT INTO CUSTOMER (FIRST_NAME, LAST_NAME, SIGNATURE_URL) VALUES
 ('Ziad', 'Mohamed', 'https://example.com/signatures/ziad_kamal.png'),
 ('Amr', 'Youssef', 'https://example.com/signatures/amr_youssef.png'),
 ('Omar', 'Ibrahim', 'https://example.com/signatures/omar_ibrahim.png');
+
+-- Insert initial admin user
+INSERT INTO users (id, email, password, first_name, last_name, role, created_at, updated_at)
+VALUES (
+    1,
+    'admin@validata.com',
+    '$2a$10$xn3LI/AjqicFYZFruSwve.681477XaVNaUQbr1gioaWPn4t1KsnmG', -- password: admin123
+    'Admin',
+    'User',
+    'ADMIN',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+-- Insert test user
+INSERT INTO users (id, email, password, first_name, last_name, role, created_at, updated_at)
+VALUES (
+    2,
+    'user@validata.com',
+    '$2a$10$xn3LI/AjqicFYZFruSwve.681477XaVNaUQbr1gioaWPn4t1KsnmG', -- password: admin123
+    'Test',
+    'User',
+    'USER',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+-- Insert sample customers
+INSERT INTO customers (id, first_name, last_name, email, phone, address, created_at, updated_at)
+VALUES (
+    1,
+    'John',
+    'Doe',
+    'john.doe@example.com',
+    '+1234567890',
+    '123 Main St, City, Country',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+INSERT INTO customers (id, first_name, last_name, email, phone, address, created_at, updated_at)
+VALUES (
+    2,
+    'Jane',
+    'Smith',
+    'jane.smith@example.com',
+    '+1987654321',
+    '456 Oak Ave, Town, Country',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+INSERT INTO customers (id, first_name, last_name, email, phone, address, created_at, updated_at)
+VALUES (
+    3,
+    'Robert',
+    'Johnson',
+    'robert.johnson@example.com',
+    '+1122334455',
+    '789 Pine Rd, Village, Country',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+-- Insert sample customer signatures (Note: These are placeholder binary data)
+-- In a real application, you would need to insert actual signature image data
+INSERT INTO customer_signatures (id, customer_id, signature_data, file_name, content_type, file_size, created_at, updated_at)
+VALUES (
+    1,
+    1,
+    E'\\x89504E470D0A1A0A0000000D49484452000000010000000108060000001F15C4890000000D4944415478DA63FAFFFF3F0300000500010D0A2DB40000000049454E44AE426082',
+    'john_signature.png',
+    'image/png',
+    67,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+INSERT INTO customer_signatures (id, customer_id, signature_data, file_name, content_type, file_size, created_at, updated_at)
+VALUES (
+    2,
+    2,
+    E'\\x89504E470D0A1A0A0000000D49484452000000010000000108060000001F15C4890000000D4944415478DA63FAFFFF3F0300000500010D0A2DB40000000049454E44AE426082',
+    'jane_signature.png',
+    'image/png',
+    67,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+);
+
+-- Reset sequences to avoid conflicts with inserted data
+SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
+SELECT setval('customers_id_seq', (SELECT MAX(id) FROM customers));
+SELECT setval('customer_signatures_id_seq', (SELECT MAX(id) FROM customer_signatures));
