@@ -27,7 +27,7 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
     @Value("${model.server.base-url}")
     private String baseUrl;
 
-    private static final String PREDICT_ENDPOINT = "/predict";
+    private static final String PREDICT_ENDPOINT = "/signature/predict";
     private static final String FIELD_GENUINE_SIGNATURE = "genuineSignature";
     private static final String FIELD_SIGNATURE_TO_VERIFY = "signatureToVerify";
 
