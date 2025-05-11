@@ -102,5 +102,5 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         return customerMapper.toResponse(customer);
-    }
+        }
 }

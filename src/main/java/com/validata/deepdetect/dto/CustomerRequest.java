@@ -6,10 +6,10 @@ import jakarta.validation.constraints.Pattern;
 
 public record CustomerRequest(
     @NotBlank(message = "First name is required")
-    String firstName,
+        String firstName,
 
     @NotBlank(message = "Last name is required")
-    String lastName,
+        String lastName,
 
     @Email(message = "Invalid email format")
     String email,

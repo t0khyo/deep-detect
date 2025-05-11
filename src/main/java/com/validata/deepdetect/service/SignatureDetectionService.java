@@ -1,8 +1,9 @@
 package com.validata.deepdetect.service;
 
-import com.validata.deepdetect.dto.SignatureDetectionResponse;
+import com.validata.deepdetect.dto.SignatureVerificationResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface SignatureDetectionService {
-    public SignatureDetectionResponse verifySignature(MultipartFile genuineSignatureFile, MultipartFile signatureToVerifyFile);
+    SignatureVerificationResponse verifySignature(MultipartFile genuineSignature, MultipartFile signatureToVerify);
+    SignatureVerificationResponse verifyCustomerSignature(String customerId, MultipartFile signatureToVerify);
 }
