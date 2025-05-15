@@ -18,13 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/audio")
+@RequestMapping("/api/v1/audio")
 @RequiredArgsConstructor
 @Tag(name = "Audio Detection", description = "APIs for audio authenticity analysis")
 public class AudioDetectionController {
     private final AudioDetectionService audioDetectionService;
 
-    @PostMapping(value = "/predict", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/verify", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(
         summary = "Analyze audio authenticity",
         description = "Analyzes an audio file (WAV or MP3) to determine if it's real or fake"
