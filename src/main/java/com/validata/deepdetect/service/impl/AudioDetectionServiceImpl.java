@@ -1,10 +1,17 @@
 package com.validata.deepdetect.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.validata.deepdetect.dto.AudioDetectionResponse;
 import com.validata.deepdetect.service.AudioDetectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -15,6 +22,14 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AudioDetectionServiceImpl implements AudioDetectionService {
+    @Value("${model.server.base-url}")
+    private String baseUrl;
+
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    private static final String PREDICT_ENDPOINT = "/api/audio/predict";
+    private static final String FIELD_AUDIO = "audio";
 
     private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
             "audio/wav",
@@ -29,13 +44,43 @@ public class AudioDetectionServiceImpl implements AudioDetectionService {
         validateAudioFile(audioFile);
         
         try {
-            // TODO: Implement the actual audio prediction logic here
-            // This is where you would integrate with your ML model
-            // For now, returning a dummy response
-            return new AudioDetectionResponse("Real audio");
-        } catch (Exception e) {
-            log.error("Error processing audio file", e);
+            // Create headers for multipart request
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+            // Create the multipart request body
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+            ByteArrayResource resource = new ByteArrayResource(audioFile.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return audioFile.getOriginalFilename();
+                }
+            };
+            body.add(FIELD_AUDIO, resource);
+
+            // Create the request entity
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            // Make the API call to the model server
+            String url = baseUrl + PREDICT_ENDPOINT;
+            ResponseEntity<AudioDetectionResponse> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    requestEntity,
+                    AudioDetectionResponse.class
+            );
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                return response.getBody();
+            } else {
+                throw new RuntimeException("Invalid response from model server");
+            }
+        } catch (IOException e) {
+            log.error("Error reading audio file", e);
             throw new RuntimeException("Failed to process audio file", e);
+        } catch (Exception e) {
+            log.error("Error calling model server", e);
+            throw new RuntimeException("Failed to get prediction from model server", e);
         }
     }
 
