@@ -1,8 +1,5 @@
 package com.validata.deepdetect.service.impl;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.S3Object;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.validata.deepdetect.dto.SignatureVerificationResponse;
 import com.validata.deepdetect.exception.CustomerNotFoundException;
 import com.validata.deepdetect.exception.InvalidFileException;
@@ -23,21 +20,18 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SignatureDetectionServiceImpl implements SignatureDetectionService {
-    @Value("${model.server.base-url}")
-    private String baseUrl;
-
-    private final RestTemplate restTemplate;
-    private final CustomerRepository customerRepository;
-
     private static final String PREDICT_ENDPOINT = "/api/signature/predict";
     private static final String FIELD_GENUINE_SIGNATURE = "genuineSignature";
     private static final String FIELD_SIGNATURE_TO_VERIFY = "signatureToVerify";
+    private final RestTemplate restTemplate;
+    private final CustomerRepository customerRepository;
+    @Value("${model.server.base-url}")
+    private String baseUrl;
 
     @Override
     public SignatureVerificationResponse verifySignature(MultipartFile genuineSignature, MultipartFile signatureToVerify) {
@@ -83,7 +77,7 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
         try {
             String signatureUrl = getCustomerSignatureUrl(customerId);
             log.info("Retrieved signature URL for customer {}", customerId);
-            
+
             ResponseEntity<byte[]> originalSignatureResponse = restTemplate.getForEntity(signatureUrl, byte[].class);
             if (originalSignatureResponse.getStatusCode() != HttpStatus.OK || originalSignatureResponse.getBody() == null) {
                 log.error("Failed to download original signature from URL: {}", signatureUrl);
@@ -129,17 +123,17 @@ public class SignatureDetectionServiceImpl implements SignatureDetectionService 
             throw new ModelServerException("Error during HTTP call to model server: " + e.getMessage(), e);
         } catch (Exception e) {
             log.error("Failed to verify signature for customer {}: {}", customerId, e.getMessage());
-            throw new StorageException("Failed to verify signature", e);
+            throw new StorageException("Failed to verify signature: " + e.getMessage(), e);
         }
     }
 
     private String getCustomerSignatureUrl(String customerId) {
         return customerRepository.findById(Long.parseLong(customerId))
-            .orElseThrow(() -> {
-                log.error("Customer not found with ID: {}", customerId);
-                return new CustomerNotFoundException("Customer not found with ID: " + customerId);
-            })
-            .getSignatureUrl();
+                .orElseThrow(() -> {
+                    log.error("Customer not found with ID: {}", customerId);
+                    return new CustomerNotFoundException("Customer not found with ID: " + customerId);
+                })
+                .getSignatureUrl();
     }
 
     private ByteArrayResource createFileResource(MultipartFile file) {
