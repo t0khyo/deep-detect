@@ -161,7 +161,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             Exception ex,
             WebRequest request) {
         log.error("Unhandled exception occurred", ex);
-        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+        ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
         apiError.setPath(request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }

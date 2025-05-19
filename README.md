@@ -1,4 +1,4 @@
-# Deep Detect - Graduation Project
+# Deep Detect Backend - Graduation Project
 
 ## Project Overview
 Deep Detect is a sophisticated backend application built with Spring Boot that provides advanced detection and analysis capabilities. The project implements a secure, scalable, and maintainable architecture following modern software development practices.

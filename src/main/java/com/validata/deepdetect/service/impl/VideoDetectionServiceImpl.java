@@ -33,6 +33,7 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
 
     private static final String PREDICT_ENDPOINT = "/api/video/predict";
     private static final String FIELD_VIDEO = "video";
+    private static final long MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
 
     @Override
     public VideoDetectionResponse analyzeVideo(MultipartFile videoFile) {
@@ -67,8 +68,15 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
                 // Check if the response contains error information
                 if (rootNode.has("error")) {
                     String errorMessage = rootNode.get("error").asText();
-                    log.error("Model server returned error: {}", errorMessage);
+                    log.error("Model server returned error for file {}: {}", videoFile.getOriginalFilename(), errorMessage);
                     throw new ModelServerException("Model server error: " + errorMessage);
+                }
+
+                // Validate required fields in the response
+                if (!rootNode.has("confidence") || !rootNode.has("isAuthentic") || !rootNode.has("detectedType")) {
+                    String errorMessage = "Model server response missing required fields";
+                    log.error("{} for file {}", errorMessage, videoFile.getOriginalFilename());
+                    throw new ModelServerException(errorMessage);
                 }
 
                 // Convert to VideoDetectionResponse
@@ -82,15 +90,19 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
 
                 return response;
             } else {
-                String errorMessage = "Model server returned unexpected response: " + rawResponse.getStatusCode();
+                String errorMessage = String.format("Model server returned unexpected response: %s for file %s", 
+                    rawResponse.getStatusCode(), videoFile.getOriginalFilename());
                 log.error(errorMessage);
                 throw new ModelServerException(errorMessage);
             }
         } catch (RestClientException e) {
-            log.error("Error during video analysis request: {}", e.getMessage());
+            log.error("Error during video analysis request for file {}: {}", videoFile.getOriginalFilename(), e.getMessage());
             throw new ModelServerException("Error during video analysis: " + e.getMessage(), e);
+        } catch (IOException e) {
+            log.error("Error reading video file {}: {}", videoFile.getOriginalFilename(), e.getMessage());
+            throw new ModelServerException("Error reading video file: " + videoFile.getOriginalFilename(), e);
         } catch (Exception e) {
-            log.error("Error parsing model server response: {}", e.getMessage());
+            log.error("Error parsing model server response for file {}: {}", videoFile.getOriginalFilename(), e.getMessage());
             throw new ModelServerException("Error parsing model server response: " + e.getMessage(), e);
         }
     }
@@ -122,9 +134,8 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
             throw new InvalidFileException("Invalid file type. Expected video file, got: " + contentType);
         }
         
-        // Validate file size (e.g., max 100MB)
-        long maxSize = 100 * 1024 * 1024; // 100MB in bytes
-        if (file.getSize() > maxSize) {
+        // Validate file size
+        if (file.getSize() > MAX_FILE_SIZE) {
             log.error("Video file size exceeds limit: {} bytes", file.getSize());
             throw new InvalidFileException("Video file size exceeds maximum limit of 100MB");
         }

@@ -1,7 +1,9 @@
 package com.validata.deepdetect.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.validata.deepdetect.dto.AudioDetectionResponse;
+import com.validata.deepdetect.exception.ModelServerException;
 import com.validata.deepdetect.service.AudioDetectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -63,24 +66,46 @@ public class AudioDetectionServiceImpl implements AudioDetectionService {
 
             // Make the API call to the model server
             String url = baseUrl + PREDICT_ENDPOINT;
-            ResponseEntity<AudioDetectionResponse> response = restTemplate.exchange(
+            ResponseEntity<String> rawResponse = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     requestEntity,
-                    AudioDetectionResponse.class
+                    String.class
             );
 
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                return response.getBody();
+            if (rawResponse.getStatusCode() == HttpStatus.OK && rawResponse.getBody() != null) {
+                String responseBody = rawResponse.getBody();
+                
+                // Parse the response as JsonNode to inspect the structure
+                JsonNode rootNode = objectMapper.readTree(responseBody);
+                
+                // Check if the response contains error information
+                if (rootNode.has("error")) {
+                    String errorMessage = rootNode.get("error").asText();
+                    log.error("Model server returned error: {}", errorMessage);
+                    throw new ModelServerException("Model server error: " + errorMessage);
+                }
+
+                // Convert to AudioDetectionResponse
+                AudioDetectionResponse response = objectMapper.readValue(responseBody, AudioDetectionResponse.class);
+                log.info("Successfully analyzed audio: {} - Prediction: {}", 
+                        audioFile.getOriginalFilename(),
+                        response.getPrediction());
+                return response;
             } else {
-                throw new RuntimeException("Invalid response from model server");
+                String errorMessage = "Model server returned unexpected response: " + rawResponse.getStatusCode();
+                log.error(errorMessage);
+                throw new ModelServerException(errorMessage);
             }
+        } catch (RestClientException e) {
+            log.error("Error during audio analysis request: {}", e.getMessage());
+            throw new ModelServerException("Error during audio analysis: " + e.getMessage(), e);
         } catch (IOException e) {
-            log.error("Error reading audio file", e);
-            throw new RuntimeException("Failed to process audio file", e);
+            log.error("Error reading audio file: {}", e.getMessage());
+            throw new ModelServerException("Error reading audio file: " + audioFile.getOriginalFilename(), e);
         } catch (Exception e) {
-            log.error("Error calling model server", e);
-            throw new RuntimeException("Failed to get prediction from model server", e);
+            log.error("Error parsing model server response: {}", e.getMessage());
+            throw new ModelServerException("Error parsing model server response: " + e.getMessage(), e);
         }
     }
 

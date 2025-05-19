@@ -3,10 +3,7 @@ package com.validata.deepdetect.controller;
 import com.validata.deepdetect.dto.AudioDetectionResponse;
 import com.validata.deepdetect.service.AudioDetectionService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -29,25 +26,7 @@ public class AudioDetectionController {
         summary = "Analyze audio authenticity",
         description = "Analyzes an audio file (WAV or MP3) to determine if it's real or fake"
     )
-    @ApiResponses({
-        @ApiResponse(
-            responseCode = "200",
-            description = "Audio analysis completed successfully",
-            content = @Content(schema = @Schema(implementation = AudioDetectionResponse.class))
-        ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Invalid input - file is missing, empty, or invalid format"
-        ),
-        @ApiResponse(
-            responseCode = "413",
-            description = "File size exceeds maximum limit"
-        ),
-        @ApiResponse(
-            responseCode = "500",
-            description = "Internal server error or model server error"
-        )
-    })
+    @ApiResponse(responseCode = "200", description = "Audio analysis completed successfully")
     public ResponseEntity<AudioDetectionResponse> predictAudio(
             @RequestParam("audio") MultipartFile audioFile) {
         return ResponseEntity.ok(audioDetectionService.predictAudio(audioFile));
