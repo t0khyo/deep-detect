@@ -111,32 +111,32 @@ public class DataInitializer implements CommandLineRunner {
                 Customer.builder()
                     .firstName("Mohamed")
                     .lastName("Ali")
-                    .signatureUrl("https://polite-seal.static.domains/sign-1.jpg")
+                    .signatureUrl("https://deep-detect-bucket.fra1.cdn.digitaloceanspaces.com/sign-1.jpg")
                     .build(),
                 Customer.builder()
                     .firstName("Ahmed")
                     .lastName("Hassan")
-                    .signatureUrl("https://polite-seal.static.domains/sign-2.jpg")
+                    .signatureUrl("https://deep-detect-bucket.fra1.cdn.digitaloceanspaces.com/sign-2.jpg")
                     .build(),
                 Customer.builder()
                     .firstName("Khalid")
                     .lastName("Saeed")
-                    .signatureUrl("https://polite-seal.static.domains/sign-1.jpg")
+                    .signatureUrl("https://deep-detect-bucket.fra1.cdn.digitaloceanspaces.com/sign-1.jpg")
                     .build(),
                 Customer.builder()
                     .firstName("Ziad")
                     .lastName("Mohamed")
-                    .signatureUrl("https://polite-seal.static.domains/sign-2.jpg")
+                    .signatureUrl("https://deep-detect-bucket.fra1.cdn.digitaloceanspaces.com/sign-2.jpg")
                     .build(),
                 Customer.builder()
                     .firstName("Amr")
                     .lastName("Youssef")
-                    .signatureUrl("https://polite-seal.static.domains/sign-1.jpg")
+                    .signatureUrl("https://deep-detect-bucket.fra1.cdn.digitaloceanspaces.com/sign-1.jpg")
                     .build(),
                 Customer.builder()
                     .firstName("Omar")
                     .lastName("Ibrahim")
-                    .signatureUrl("https://polite-seal.static.domains/sign-1.jpg")
+                    .signatureUrl("https://deep-detect-bucket.fra1.cdn.digitaloceanspaces.com/sign-1.jpg")
                     .build()
             );
             customerRepository.saveAll(customers);
