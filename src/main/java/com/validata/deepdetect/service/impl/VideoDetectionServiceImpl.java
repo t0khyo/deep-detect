@@ -72,21 +72,14 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
                     throw new ModelServerException("Model server error: " + errorMessage);
                 }
 
-                // Validate required fields in the response
-                if (!rootNode.has("confidence") || !rootNode.has("isAuthentic") || !rootNode.has("detectedType")) {
-                    String errorMessage = "Model server response missing required fields";
-                    log.error("{} for file {}", errorMessage, videoFile.getOriginalFilename());
-                    throw new ModelServerException(errorMessage);
-                }
-
                 // Convert to VideoDetectionResponse
                 VideoDetectionResponse response = objectMapper.readValue(responseBody, VideoDetectionResponse.class);
-                
-                log.info("Successfully analyzed video: {} - Confidence: {}, IsAuthentic: {}, Type: {}",
+
+                log.info("Successfully analyzed video: {} - Confidence: {}, IsReal: {}, Prediction: {}",
                         videoFile.getOriginalFilename(),
                         response.confidence(),
-                        response.isAuthentic(),
-                        response.detectedType());
+                        response.isReal(),
+                        response.prediction());
 
                 return response;
             } else {

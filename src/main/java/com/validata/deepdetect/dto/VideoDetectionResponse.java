@@ -5,10 +5,13 @@ import lombok.Builder;
 
 @Builder
 public record VideoDetectionResponse(
-        Float confidence,
+        @JsonProperty("confidence")
+        double confidence,
+
         @JsonProperty("is_real")
-        Boolean isAuthentic,
+        boolean isReal,
+
         @JsonProperty("prediction")
-        String detectedType
+        String prediction
 ) {
-} 
+}
