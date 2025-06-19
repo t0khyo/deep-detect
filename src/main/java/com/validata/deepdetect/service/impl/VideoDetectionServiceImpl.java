@@ -19,6 +19,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -30,6 +32,17 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+
+    private static final List<String> ALLOWED_VIDEO_TYPES = Arrays.asList(
+            "video/mp4",
+            "video/x-m4v",
+            "video/quicktime",
+            "video/x-msvideo",
+            "video/x-ms-wmv",
+            "video/webm",
+            "video/ogg"
+    );
+
 
     private static final String PREDICT_ENDPOINT = "/api/video/predict";
     private static final String FIELD_VIDEO = "video";
@@ -122,11 +135,11 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
         
         // Validate file type
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("video/")) {
+        if (contentType == null || !ALLOWED_VIDEO_TYPES.contains(contentType)) {
             log.error("Invalid video file type: {}", contentType);
-            throw new InvalidFileException("Invalid file type. Expected video file, got: " + contentType);
+            throw new InvalidFileException("Unsupported video format. Allowed types: MP4, MOV, AVI, WEBM, etc.");
         }
-        
+
         // Validate file size
         if (file.getSize() > MAX_FILE_SIZE) {
             log.error("Video file size exceeds limit: {} bytes", file.getSize());
