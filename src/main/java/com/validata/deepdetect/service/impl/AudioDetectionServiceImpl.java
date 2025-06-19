@@ -1,7 +1,7 @@
 package com.validata.deepdetect.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.validata.deepdetect.dto.AudioDetectionResponse;
 import com.validata.deepdetect.exception.ModelServerException;
 import com.validata.deepdetect.service.AudioDetectionService;
@@ -25,27 +25,27 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AudioDetectionServiceImpl implements AudioDetectionService {
-    @Value("${model.server.base-url}")
-    private String baseUrl;
-
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-
     private static final String PREDICT_ENDPOINT = "/api/audio/predict";
     private static final String FIELD_AUDIO = "audio";
-
     private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
-            "audio/wav",
-            "audio/wave",
-            "audio/x-wav",
-            "audio/mpeg",
+            "audio/mpeg",     // .mp3
+            "audio/wav",      // .wav
+            "audio/x-wav",    // .wav (some browsers)
+            "audio/x-m4a",    // .m4a (Apple format)
+            "audio/aac",      // .aac
+            "audio/ogg",      // .ogg
+            "audio/webm",      // .webm audio
             "audio/mp3"
     );
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    @Value("${model.server.base-url}")
+    private String baseUrl;
 
     @Override
     public AudioDetectionResponse predictAudio(MultipartFile audioFile) {
         validateAudioFile(audioFile);
-        
+
         try {
             // Create headers for multipart request
             HttpHeaders headers = new HttpHeaders();
@@ -75,10 +75,10 @@ public class AudioDetectionServiceImpl implements AudioDetectionService {
 
             if (rawResponse.getStatusCode() == HttpStatus.OK && rawResponse.getBody() != null) {
                 String responseBody = rawResponse.getBody();
-                
+
                 // Parse the response as JsonNode to inspect the structure
                 JsonNode rootNode = objectMapper.readTree(responseBody);
-                
+
                 // Check if the response contains error information
                 if (rootNode.has("error")) {
                     String errorMessage = rootNode.get("error").asText();
@@ -88,7 +88,7 @@ public class AudioDetectionServiceImpl implements AudioDetectionService {
 
                 // Convert to AudioDetectionResponse
                 AudioDetectionResponse response = objectMapper.readValue(responseBody, AudioDetectionResponse.class);
-                log.info("Successfully analyzed audio: {} - Prediction: {}", 
+                log.info("Successfully analyzed audio: {} - Prediction: {}",
                         audioFile.getOriginalFilename(),
                         response.getPrediction());
                 return response;
@@ -119,7 +119,6 @@ public class AudioDetectionServiceImpl implements AudioDetectionService {
             throw new IllegalArgumentException("Invalid file format. Only WAV and MP3 files are supported");
         }
 
-        // You might want to add additional validation like file size limits
         if (file.getSize() > 10 * 1024 * 1024) { // 10MB limit
             throw new IllegalArgumentException("File size exceeds maximum limit of 10MB");
         }
