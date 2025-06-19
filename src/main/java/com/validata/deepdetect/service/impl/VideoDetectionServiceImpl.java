@@ -1,16 +1,20 @@
 package com.validata.deepdetect.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.validata.deepdetect.dto.VideoDetectionResponse;
 import com.validata.deepdetect.exception.InvalidFileException;
 import com.validata.deepdetect.exception.ModelServerException;
+import com.validata.deepdetect.model.VideoDetectionEntity;
+import com.validata.deepdetect.repository.VideoDetectionRepository;
 import com.validata.deepdetect.service.VideoDetectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -19,20 +23,14 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class VideoDetectionServiceImpl implements VideoDetectionService {
-    @Value("${model.server.base-url}")
-    private String baseUrl;
-
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
-
     private static final List<String> ALLOWED_VIDEO_TYPES = Arrays.asList(
             "video/mp4",
             "video/x-m4v",
@@ -43,10 +41,15 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
             "video/ogg"
     );
 
-
     private static final String PREDICT_ENDPOINT = "/api/video/predict";
     private static final String FIELD_VIDEO = "video";
     private static final long MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
+    private final VideoDetectionRepository videoDetectionRepository;
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Value("${model.server.base-url}")
+    private String baseUrl;
 
     @Override
     public VideoDetectionResponse analyzeVideo(MultipartFile videoFile) {
@@ -74,10 +77,10 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
 
             if (rawResponse.getStatusCode() == HttpStatus.OK && rawResponse.getBody() != null) {
                 String responseBody = rawResponse.getBody();
-                
+
                 // Parse the response as JsonNode to inspect the structure
                 JsonNode rootNode = objectMapper.readTree(responseBody);
-                
+
                 // Check if the response contains error information
                 if (rootNode.has("error")) {
                     String errorMessage = rootNode.get("error").asText();
@@ -94,10 +97,23 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
                         response.isReal(),
                         response.prediction());
 
+                Authentication user = SecurityContextHolder.getContext().getAuthentication();
+
+                VideoDetectionEntity videoDetectionRecord = VideoDetectionEntity.builder()
+                        .confidence(response.confidence())
+                        .isReal(response.isReal())
+                        .prediction(response.prediction())
+                        .videoFileName(videoFile.getOriginalFilename())
+                        .customerId(user.getName())
+                        .detectedAt(LocalDateTime.now())
+                        .build();
+
+                videoDetectionRepository.save(videoDetectionRecord);
+
                 return response;
             } else {
-                String errorMessage = String.format("Model server returned unexpected response: %s for file %s", 
-                    rawResponse.getStatusCode(), videoFile.getOriginalFilename());
+                String errorMessage = String.format("Model server returned unexpected response: %s for file %s",
+                        rawResponse.getStatusCode(), videoFile.getOriginalFilename());
                 log.error(errorMessage);
                 throw new ModelServerException(errorMessage);
             }
@@ -132,7 +148,7 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
             log.error("Invalid video file: file is null or empty");
             throw new InvalidFileException("Video file cannot be null or empty");
         }
-        
+
         // Validate file type
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_VIDEO_TYPES.contains(contentType)) {
@@ -146,4 +162,5 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
             throw new InvalidFileException("Video file size exceeds maximum limit of 100MB");
         }
     }
+
 } 
