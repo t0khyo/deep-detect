@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.validata.deepdetect.dto.AudioDetectionResponse;
 import com.validata.deepdetect.exception.ModelServerException;
+import com.validata.deepdetect.model.AudioDetectionEntity;
+import com.validata.deepdetect.repository.AudioDetectionRepository;
 import com.validata.deepdetect.service.AudioDetectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -18,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -27,6 +32,8 @@ import java.util.List;
 public class AudioDetectionServiceImpl implements AudioDetectionService {
     private static final String PREDICT_ENDPOINT = "/api/audio/predict";
     private static final String FIELD_AUDIO = "audio";
+    private final AudioDetectionRepository audioDetectionRepository;
+
     private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
             "audio/mpeg",     // .mp3
             "audio/wav",      // .wav
@@ -91,6 +98,18 @@ public class AudioDetectionServiceImpl implements AudioDetectionService {
                 log.info("Successfully analyzed audio: {} - Prediction: {}",
                         audioFile.getOriginalFilename(),
                         response.getPrediction());
+
+                Authentication user = SecurityContextHolder.getContext().getAuthentication();
+
+                AudioDetectionEntity entity = AudioDetectionEntity.builder()
+                        .prediction(response.getPrediction())
+                        .audioFileName(audioFile.getOriginalFilename())
+                        .customerId(user.getName())
+                        .detectedAt(LocalDateTime.now())
+                        .build();
+
+                audioDetectionRepository.save(entity);
+
                 return response;
             } else {
                 String errorMessage = "Model server returned unexpected response: " + rawResponse.getStatusCode();
