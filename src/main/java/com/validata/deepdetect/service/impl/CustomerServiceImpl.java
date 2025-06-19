@@ -81,11 +81,6 @@ public class CustomerServiceImpl implements CustomerService {
                     return new ResourceNotFoundException("Customer not found with id: " + id);
                 });
 
-        if (customer.getSignatureUrl() != null) {
-            log.info("Deleting signature for customer ID: {}", id);
-            signatureStorageService.deleteSignature(customer.getSignatureUrl());
-        }
-
         customerRepository.delete(customer);
         log.info("Successfully deleted customer with ID: {}", id);
     }
@@ -99,11 +94,6 @@ public class CustomerServiceImpl implements CustomerService {
                     log.error("Customer not found with ID: {}", id);
                     return new ResourceNotFoundException("Customer not found with id: " + id);
                 });
-
-        if (customer.getSignatureUrl() != null) {
-            log.info("Deleting existing signature for customer ID: {}", id);
-            signatureStorageService.deleteSignature(customer.getSignatureUrl());
-        }
 
         String signatureUrl = signatureStorageService.uploadSignature(file, id.toString());
         customer.setSignatureUrl(signatureUrl);
@@ -124,7 +114,6 @@ public class CustomerServiceImpl implements CustomerService {
                 });
 
         if (customer.getSignatureUrl() != null) {
-            signatureStorageService.deleteSignature(customer.getSignatureUrl());
             customer.setSignatureUrl(null);
             customer = customerRepository.save(customer);
             log.info("Successfully deleted signature for customer ID: {}", id);

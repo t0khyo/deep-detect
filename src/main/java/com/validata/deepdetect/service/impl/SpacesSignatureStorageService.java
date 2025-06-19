@@ -1,7 +1,10 @@
 package com.validata.deepdetect.service.impl;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.validata.deepdetect.exception.FileStorageException;
 import com.validata.deepdetect.service.SignatureStorageService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -20,26 +24,24 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SpacesSignatureStorageService implements SignatureStorageService {
 
-    private final AmazonS3 s3Client;
-
-    @Value("${spaces.bucket-name}")
-    private String bucketName;
-
-    @Value("${spaces.endpoint}")
-    private String endpoint;
-
     private static final List<String> ALLOWED_CONTENT_TYPES = Arrays.asList(
             "image/jpeg",
+            "image/jpg",
             "image/png",
-            "image/gif"
+            "image/gif",
+            "image/webp"
     );
-
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private final AmazonS3 s3Client;
+    @Value("${spaces.bucket-name}")
+    private String bucketName;
+    @Value("${spaces.endpoint}")
+    private String endpoint;
 
     @Override
     public String uploadSignature(MultipartFile file, String customerId) {
         validateFile(file);
-        
+
         String fileName = generateFileName(file, customerId);
         try {
             log.info("Uploading signature for customer {} to S3", customerId);
@@ -119,7 +121,7 @@ public class SpacesSignatureStorageService implements SignatureStorageService {
 
     private String generateFileName(MultipartFile file, String customerId) {
         String extension = getFileExtension(file.getOriginalFilename());
-        return "signatures/" + customerId + "/" + UUID.randomUUID().toString() + extension;
+        return "signatures/" + customerId + "/" + UUID.randomUUID() + extension;
     }
 
     private String getFileExtension(String fileName) {
@@ -132,10 +134,14 @@ public class SpacesSignatureStorageService implements SignatureStorageService {
     }
 
     private String extractKeyFromUrl(String url) {
-        if (url == null || !url.startsWith(endpoint)) {
+        try {
+            URI uri = URI.create(url);
+            String path = uri.getPath(); // "/signatures/.../file.jpg"
+            return path.startsWith("/") ? path.substring(1) : path;
+        } catch (Exception e) {
             log.error("Invalid signature URL: {}", url);
             throw new FileStorageException("Invalid signature URL format");
         }
-        return url.substring(endpoint.length() + bucketName.length() + 2); // +2 for the slashes
     }
+
 } 
