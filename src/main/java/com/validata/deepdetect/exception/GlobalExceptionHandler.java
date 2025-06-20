@@ -165,4 +165,23 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         apiError.setPath(request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+
+    @ExceptionHandler(ExistingSocialUserException.class)
+    protected ResponseEntity<Object> handleExistingSocialUserException(
+            ExistingSocialUserException ex,
+            WebRequest request) {
+        ApiError apiError = new ApiError(HttpStatus.CONFLICT, ex.getMessage());
+        apiError.setPath(request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
+    }
+    @ExceptionHandler(LoginFailedException.class)
+    protected ResponseEntity<Object> handleLoginFailedException(
+            LoginFailedException ex,
+            WebRequest request) {
+        ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        apiError.setPath(request.getDescription(false).replace("uri=", ""));
+        return new ResponseEntity<>(apiError, HttpStatus.UNAUTHORIZED);
+    }
+
 }

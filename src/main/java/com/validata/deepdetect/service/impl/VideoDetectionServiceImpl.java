@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -61,10 +62,10 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
 
             if (rawResponse.getStatusCode() == HttpStatus.OK && rawResponse.getBody() != null) {
                 String responseBody = rawResponse.getBody();
-                
+
                 // Parse the response as JsonNode to inspect the structure
                 JsonNode rootNode = objectMapper.readTree(responseBody);
-                
+
                 // Check if the response contains error information
                 if (rootNode.has("error")) {
                     String errorMessage = rootNode.get("error").asText();
@@ -83,7 +84,7 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
 
                 return response;
             } else {
-                String errorMessage = String.format("Model server returned unexpected response: %s for file %s", 
+                String errorMessage = String.format("Model server returned unexpected response: %s for file %s",
                     rawResponse.getStatusCode(), videoFile.getOriginalFilename());
                 log.error(errorMessage);
                 throw new ModelServerException(errorMessage);
@@ -119,18 +120,18 @@ public class VideoDetectionServiceImpl implements VideoDetectionService {
             log.error("Invalid video file: file is null or empty");
             throw new InvalidFileException("Video file cannot be null or empty");
         }
-        
+
         // Validate file type
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("video/")) {
             log.error("Invalid video file type: {}", contentType);
             throw new InvalidFileException("Invalid file type. Expected video file, got: " + contentType);
         }
-        
+
         // Validate file size
         if (file.getSize() > MAX_FILE_SIZE) {
             log.error("Video file size exceeds limit: {} bytes", file.getSize());
             throw new InvalidFileException("Video file size exceeds maximum limit of 100MB");
         }
     }
-} 
+}

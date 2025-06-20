@@ -44,4 +44,12 @@ public class AuthController {
     ) {
         return ResponseEntity.ok(authService.login(loginRequest));
     }
+
+
+//    @PostMapping("/google")
+//    @Operation(summary = "Google login", description = "Authenticates a user using Google token and returns a JWT")
+//    @ApiResponse(responseCode = "200", description = "Google login successful")
+//    public ResponseEntity<JwtResponse> loginWithGoogle(@RequestBody GoogleTokenRequest request) {
+//        return ResponseEntity.ok(googleAuthService.loginWithGoogle(request.getIdToken()));
+//    }
 }

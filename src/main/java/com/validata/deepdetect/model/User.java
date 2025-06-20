@@ -15,6 +15,7 @@ import java.util.Set;
 
 @Builder
 @Getter
+@Setter
 @Table(name = "users")
 @Entity
 @NoArgsConstructor
@@ -43,6 +44,11 @@ public class User implements UserDetails, CredentialsContainer {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private List<Role> roles;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider")
+    private AuthProvider authProvider;
+
 
     @CreationTimestamp
     private LocalDateTime createdAt;
